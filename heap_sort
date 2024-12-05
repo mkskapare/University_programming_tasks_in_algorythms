@@ -1,0 +1,185 @@
+//user inputs size of array, the array get's scrambled in multiple ways and each array get's sorted with heap sort, sorting outcome (array size, scramble type, sorting operation count) get's saved onto a csv file
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace SortingAlgorithms
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string folderPath = @"E:\hw\pract10AuS";
+            string csvFilePath = Path.Combine(folderPath, "Heap_sort.csv");
+
+            Directory.CreateDirectory(folderPath);
+
+            using (StreamWriter writer = new StreamWriter(csvFilePath))
+            {
+                writer.WriteLine("ArraySize,FillMethod,OperationCount");
+            }
+
+            Console.WriteLine("Sveicināti! Šī programma veic masīvu ģenerēšanu un kārtošanu.");
+            Console.Write("Ievadiet masīva izmēru (100-10000): ");
+            int size = int.Parse(Console.ReadLine());
+
+            if (size < 100 || size > 10000)
+            {
+                Console.WriteLine("Nepareizs masīva izmērs. Lūdzu, izvēlieties skaitli no 100 līdz 10000.");
+                return;
+            }
+
+            Console.WriteLine($"Masīva izmērs: {size}");
+
+            string[] fillMethodNames = {
+                "Ascending", "Descending", "Random", "UniqueRandom",
+                "NearlySortedAscending", "NearlySortedDescending"
+            };
+
+            Action<int[]>[] fillMethods =
+            {
+                FillAscending,
+                FillDescending,
+                FillRandom,
+                FillUniqueRandom,
+                FillNearlySortedAscending,
+                FillNearlySortedDescending
+            };
+
+            foreach (var (fillMethod, methodName) in fillMethods.Zip(fillMethodNames, (f, n) => (f, n)))
+            {
+                Console.WriteLine($"\nĢenerē masīvu ar metodi: {methodName}");
+                int[] array = new int[size];
+                fillMethod(array);
+
+                Console.WriteLine("Pirms kārtošanas:");
+                Console.WriteLine(string.Join(", ", array.Take(20)) + (array.Length > 20 ? "..." : ""));
+
+                Console.WriteLine("Veic kārtošanu ar Heap Sort...");
+                int operationCount = HeapSort(array);
+
+                Console.WriteLine("Pēc kārtošanas:");
+                Console.WriteLine(string.Join(", ", array.Take(20)) + (array.Length > 20 ? "..." : ""));
+
+                Console.WriteLine($"Kārtošanas operāciju skaits: {operationCount}");
+
+                using (StreamWriter writer = new StreamWriter(csvFilePath, true))
+                {
+                    writer.WriteLine($"{size},{methodName},{operationCount}");
+                }
+            }
+
+            Console.WriteLine($"\nRezultāti saglabāti CSV failā: {csvFilePath}");
+        }
+
+        static void FillAscending(int[] array)
+        {
+            for (int i = 0; i < array.Length; i++)
+                array[i] = i + 1;
+        }
+
+        static void FillDescending(int[] array)
+        {
+            for (int i = 0; i < array.Length; i++)
+                array[i] = array.Length - i;
+        }
+
+        static void FillRandom(int[] array)
+        {
+            Random rand = new Random();
+            for (int i = 0; i < array.Length; i++)
+                array[i] = rand.Next(1, array.Length + 1);
+        }
+
+        static void FillUniqueRandom(int[] array)
+        {
+            Random rand = new Random();
+            List<int> numbers = Enumerable.Range(1, array.Length).ToList();
+            for (int i = 0; i < array.Length; i++)
+            {
+                int index = rand.Next(numbers.Count);
+                array[i] = numbers[index];
+                numbers.RemoveAt(index);
+            }
+        }
+
+        static void FillNearlySortedAscending(int[] array)
+        {
+            FillAscending(array);
+            RandomizeSubset(array, 0.3);
+        }
+
+        static void FillNearlySortedDescending(int[] array)
+        {
+            FillDescending(array);
+            RandomizeSubset(array, 0.3);
+        }
+
+        static void RandomizeSubset(int[] array, double percentage)
+        {
+            Random rand = new Random();
+            int swapCount = (int)(array.Length * percentage);
+
+            for (int i = 0; i < swapCount; i++)
+            {
+                int index1 = rand.Next(array.Length);
+                int index2 = rand.Next(array.Length);
+
+                (array[index1], array[index2]) = (array[index2], array[index1]);
+            }
+        }
+
+        static int HeapSort(int[] array)
+        {
+            int operationCount = 0;
+            int n = array.Length;
+
+            for (int i = n / 2 - 1; i >= 0; i--)
+            {
+                operationCount += Heapify(array, n, i);
+            }
+
+            for (int i = n - 1; i > 0; i--)
+            {
+                (array[0], array[i]) = (array[i], array[0]);
+                operationCount++;
+
+                operationCount += Heapify(array, i, 0);
+            }
+
+            return operationCount;
+        }
+
+        static int Heapify(int[] array, int n, int i)
+        {
+            int operationCount = 0;
+            int largest = i;
+            int left = 2 * i + 1;
+            int right = 2 * i + 2;
+
+            if (left < n && array[left] > array[largest])
+            {
+                largest = left;
+            }
+
+            if (right < n && array[right] > array[largest])
+            {
+                largest = right;
+            }
+
+            if (largest != i)
+            {
+                (array[i], array[largest]) = (array[largest], array[i]);
+                operationCount++;
+
+                operationCount += Heapify(array, n, largest);
+            }
+
+            return operationCount;
+        }
+    }
+}

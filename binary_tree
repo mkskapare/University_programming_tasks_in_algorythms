@@ -1,0 +1,308 @@
+//creates a binary tree from entered numbers and let's user delete, add, find binary tree branches, displays branches when found, let's user choose a spot where to enter a new branch
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+public class BNode
+{
+    public int Number;
+    public BNode LeftNode;
+    public BNode RightNode;
+
+    public BNode(int number)
+    {
+        Number = number;
+        LeftNode = null;
+        RightNode = null;
+    }
+}
+
+public class BTree
+{
+    private BNode rootNode;
+
+    public BTree()
+    {
+        rootNode = null;
+    }
+
+    public void Add(int n)
+    {
+        rootNode = Add(n, rootNode);
+    }
+
+    private BNode Add(int n, BNode parentNode)
+    {
+        if (parentNode == null)
+            return new BNode(n);
+
+        if (n < parentNode.Number)
+            parentNode.LeftNode = Add(n, parentNode.LeftNode);
+        else if (n > parentNode.Number)
+            parentNode.RightNode = Add(n, parentNode.RightNode);
+
+        return parentNode;
+    }
+
+    public void Print()
+    {
+        Print(rootNode, "");
+    }
+
+    public void PrintBranch(BNode node)
+    {
+        Print(node, "  ");
+    }
+
+    private void Print(BNode node, string separator)
+    {
+        if (node != null)
+        {
+            Print(node.LeftNode, separator + "  ");
+            Console.WriteLine(separator + node.Number);
+            Print(node.RightNode, separator + "  ");
+        }
+    }
+
+    public BNode FindNode(int n)
+    {
+        return FindNode(n, rootNode);
+    }
+
+    private BNode FindNode(int n, BNode node)
+    {
+        if (node == null || node.Number == n)
+            return node;
+
+        if (n < node.Number)
+            return FindNode(n, node.LeftNode);
+        else
+            return FindNode(n, node.RightNode);
+    }
+
+    public void Remove(int number)
+    {
+        rootNode = Remove(number, rootNode);
+    }
+
+    private BNode Remove(int number, BNode node)
+    {
+        if (node == null) return null;
+
+        if (number < node.Number)
+            node.LeftNode = Remove(number, node.LeftNode);
+        else if (number > node.Number)
+            node.RightNode = Remove(number, node.RightNode);
+        else
+        {
+            if (node.LeftNode == null) return node.RightNode;
+            if (node.RightNode == null) return node.LeftNode;
+
+            if (node.RightNode.LeftNode == null)
+            {
+                node.RightNode.LeftNode = node.LeftNode;
+                return node.RightNode;
+            }
+
+            BNode minNode = GetMinNode(node.RightNode);
+            node.Number = minNode.Number;
+            node.RightNode = Remove(minNode.Number, node.RightNode);
+        }
+
+        return node;
+    }
+
+    private BNode GetMinNode(BNode node)
+    {
+        while (node.LeftNode != null)
+            node = node.LeftNode;
+        return node;
+    }
+
+    public int Walk()
+    {
+        return Walk(rootNode);
+    }
+
+    private int Walk(BNode node)
+    {
+        if (node == null) return 0;
+        return 1 + Walk(node.LeftNode) + Walk(node.RightNode);
+    }
+
+    public void BuildBalancedTree(List<int> values)
+    {
+        values.Sort();
+        rootNode = BuildBalanced(values, 0, values.Count - 1);
+    }
+
+    private BNode BuildBalanced(List<int> values, int start, int end)
+    {
+        if (start > end) return null;
+
+        int mid = (start + end) / 2;
+        BNode node = new BNode(values[mid]);
+        node.LeftNode = BuildBalanced(values, start, mid - 1);
+        node.RightNode = BuildBalanced(values, mid + 1, end);
+
+        return node;
+    }
+
+    public bool AddAtSpecificPosition(int parentValue, int newValue, string position)
+    {
+        BNode parentNode = FindNode(parentValue);
+        if (parentNode == null)
+        {
+            Console.WriteLine("zars netika atrasts.");
+            return false;
+        }
+
+        if (position.ToLower() == "kreisi")
+        {
+            if (parentNode.LeftNode == null)
+            {
+                parentNode.LeftNode = new BNode(newValue);
+                return true;
+            }
+            Console.WriteLine("saja lokacija jau eksiste zars.");
+        }
+        else if (position.ToLower() == "labi")
+        {
+            if (parentNode.RightNode == null)
+            {
+                parentNode.RightNode = new BNode(newValue);
+                return true;
+            }
+            Console.WriteLine("saja lokacija jau eksiste zars.");
+        }
+        else
+        {
+            Console.WriteLine("Nepareiza pozicija. Izmanto 'kreisi' vai 'labi'.");
+        }
+        return false;
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        BTree tree = new BTree();
+        bool continueRunning = true;
+
+        Console.WriteLine("Ievadiet skaitļu secību, ko vēlaties pievienot kokam (ar atstarpēm starp tiem):");
+        string input = Console.ReadLine();
+        List<int> values = new List<int>();
+
+        foreach (var item in input.Split(' '))
+        {
+            if (int.TryParse(item, out int value))
+                values.Add(value);
+        }
+
+        tree.BuildBalancedTree(values);
+
+        Console.WriteLine("\nKoka hierarhija pēc līdzsvarotas pievienošanas:");
+        tree.Print();
+
+        while (continueRunning)
+        {
+            Console.WriteLine("\nIzvēlieties darbību:");
+            Console.WriteLine("1 - Pievienot mezglu");
+            Console.WriteLine("2 - Izdrukāt koku");
+            Console.WriteLine("3 - Atrast mezglu");
+            Console.WriteLine("4 - Dzēst mezglu");
+            Console.WriteLine("5 - Pievienot mezglu konkrētā vietā");
+            Console.WriteLine("6 - Skaitīt mezglus kokā");
+            Console.WriteLine("0 - Iziet");
+            
+
+            Console.Write("Ievadiet izvēli: ");
+            string choice = Console.ReadLine();
+                        switch (choice)
+            {
+                case "1":
+                    Console.Write("Ievadiet mezgla vērtību, lai pievienotu: ");
+                    if (int.TryParse(Console.ReadLine(), out int addValue))
+                    {
+                        tree.Add(addValue);
+                        Console.WriteLine($"Mezgls ar vērtību {addValue} pievienots.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nederīga ievade, lūdzu ievadiet skaitli.");
+                    }
+                    break;
+
+                case "2":
+                    Console.WriteLine("\nKoka hierarhija:");
+                    tree.Print();
+                    break;
+
+                case "3":
+                    Console.Write("Ievadiet vērtību, lai meklētu mezglu: ");
+                    if (int.TryParse(Console.ReadLine(), out int findValue))
+                    {
+                        BNode foundNode = tree.FindNode(findValue);
+                        if (foundNode != null)
+                        {
+                            Console.WriteLine($"Mezgls ar vērtību {findValue} atrasts.");
+                            Console.WriteLine("Mezglu koks no atrastā mezgla:");
+                            tree.PrintBranch(foundNode);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Mezgls netika atrasts.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nederīga ievade, lūdzu ievadiet skaitli.");
+                    }
+                    break;
+
+                case "4":
+                    Console.Write("Ievadiet mezgla vērtību, lai dzēstu: ");
+                    if (int.TryParse(Console.ReadLine(), out int deleteValue))
+                    {
+                        tree.Remove(deleteValue);
+                        Console.WriteLine($"Mezgls ar vērtību {deleteValue} dzēsts (ja eksistēja).");
+                    }
+                    break;
+
+                case "5":
+                    Console.Write("Ievadiet vecāku mezgla vērtību: ");
+                    if (int.TryParse(Console.ReadLine(), out int parentValue))
+                    {
+                        Console.Write("Ievadiet jauna mezgla vērtību: ");
+                        if (int.TryParse(Console.ReadLine(), out int newValue))
+                        {
+                            Console.Write("Ievadiet pozīciju (labi vai kreisi): ");
+                            string position = Console.ReadLine();
+
+                            if (tree.AddAtSpecificPosition(parentValue, newValue, position))
+                                Console.WriteLine($"Mezgls ar vērtību {newValue} pievienots kā {position} child mezglam ar vērtību {parentValue}.");
+                        }
+                    }
+                    break;
+
+                case "6":
+                    int nodeCount = tree.Walk();
+                    Console.WriteLine($"Mezglu skaits kokā: {nodeCount}");
+                    break;
+
+                case "0":
+                    continueRunning = false;
+                    Console.WriteLine("Programma beidz darbību.");
+                    break;
+
+                default:
+                    Console.WriteLine("Nederīga izvēle, lūdzu izvēlieties no 1 līdz 7.");
+                    break;
+            }
+        }
+    }
+}

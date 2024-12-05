@@ -1,3 +1,7 @@
+//let's use create a tree where main object is a city and branches can be added to it like regions in the cities or street names. branches can go under other branches. user enters name of the city and it's size in square kilometres.
+
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

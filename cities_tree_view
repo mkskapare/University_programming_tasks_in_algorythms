@@ -1,0 +1,167 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Rajons
+{
+    public string Nosaukums { get; set; }
+    public string Platiba { get; set; }
+
+    public Rajons(string nosaukums, string platiba)
+    {
+        Nosaukums = nosaukums;
+        Platiba = platiba;
+    }
+}
+
+public class Zars
+{
+    public Rajons rajons { get; set; }
+    public List<Zars> Zari { get; set; }
+
+    public Zars(Rajons rajons)
+    {
+        this.rajons = rajons;
+        Zari = new List<Zars>();
+    }
+
+    public Zars Meklet(string nosaukums)
+    {
+        if (rajons.Nosaukums == nosaukums)
+        {
+            return this;
+        }
+        foreach (var zars in Zari)
+        {
+            var atrastaisZars = zars.Meklet(nosaukums);
+            if (atrastaisZars != null)
+            {
+                return atrastaisZars;
+            }
+        }
+        return null;
+    }
+
+    public void Drukat(string indent = "")
+    {
+        Console.WriteLine($"{indent}{rajons.Nosaukums}({rajons.Platiba})");
+        foreach (var zars in Zari)
+        {
+            zars.Drukat(indent + "-------");
+        }
+    }
+}
+
+public class Koks
+{
+    public List<Zars> Zari { get; set; }
+
+    public Koks()
+    {
+        Zari = new List<Zars>();
+    }
+
+    public void Drukat()
+    {
+        foreach (var zars in Zari)
+        {
+            zars.Drukat();
+        }
+    }
+
+    public Zars Meklet(string nosaukums)
+    {
+        foreach (var zars in Zari)
+        {
+            var atrastaisZars = zars.Meklet(nosaukums);
+            if (atrastaisZars != null)
+            {
+                return atrastaisZars;
+            }
+        }
+        return null;
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var koks = new Koks();
+
+        while (true)
+        {
+            Console.WriteLine("Iespējamās darbības:");
+            Console.WriteLine("1 - pievienot pamatrajonu");
+            Console.WriteLine("2 - pievienot apakšrajonu");
+            Console.WriteLine("3 - labot rajona datus");
+            Console.WriteLine("4 - izvadīt rajonu un apakšrajonu datus");
+            Console.WriteLine("0 - beigt darbu");
+            Console.Write("Ievdiet velamo darbibu: ");
+            var darbiba = Console.ReadLine();
+
+            if (darbiba == "0")
+            {
+                break;
+            }
+
+            switch (darbiba)
+            {
+                case "1":
+                    Console.Write("Ievadiet rajona nosaukumu: ");
+                    var nosaukums = Console.ReadLine();
+                    Console.Write("Ievadiet rajona platību: ");
+                    var platiba = Console.ReadLine();
+                    koks.Zari.Add(new Zars(new Rajons(nosaukums, platiba)));
+                    break;
+
+                case "2":
+                    Console.Write("Ievadiet rajona nosaukumu, kuram pievienot: ");
+                    var meklesanasNosaukums = Console.ReadLine();
+                    var mZars = koks.Meklet(meklesanasNosaukums);
+                    if (mZars != null)
+                    {
+                        Console.Write("Ievadiet apakšrajona nosaukumu: ");
+                        var apaknosaukums = Console.ReadLine();
+                        Console.Write("Ievadiet apakšrajona platību: ");
+                        var apakplatiba = Console.ReadLine();
+                        mZars.Zari.Add(new Zars(new Rajons(apaknosaukums, apakplatiba)));
+                    }
+                    else
+                    {
+                        Console.WriteLine("Rajons nav atrasts.");
+                    }
+                    break;
+
+                case "3":
+                    Console.Write("Ievadiet labojamā rajona nosaukumu: ");
+                    var labojamaisNosaukums = Console.ReadLine();
+                    var labojamaisZars = koks.Meklet(labojamaisNosaukums);
+                    if (labojamaisZars != null)
+                    {
+                        Console.Write("Ievadiet jauno rajona nosaukumu: ");
+                        labojamaisZars.rajons.Nosaukums = Console.ReadLine();
+                        Console.Write("Ievadiet jauno rajona platību: ");
+                        labojamaisZars.rajons.Platiba = Console.ReadLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Rajons nav atrasts.");
+                    }
+                    break;
+
+                case "4":
+                    Console.WriteLine(" ");
+                    koks.Drukat();
+                    Console.WriteLine(" ");
+                    break;
+
+                default:
+                    Console.WriteLine("Nederīga izvēle.");
+                    break;
+            }
+        }
+    }
+}
